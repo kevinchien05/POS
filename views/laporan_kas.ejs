@@ -528,7 +528,9 @@
         for (const month in PurmonthlyTotals) {
           totalPembelian += parseInt(PurmonthlyTotals[month]);
         }
-        totalSeluruhPembelian += parseInt(pays.data.total);
+        for (const month in TotalmonthlyTotals){
+          totalSeluruhPembelian += parseInt(TotalmonthlyTotals[month]);
+        }
         for (const month in HppmonthlyTotals) {
           totalKeuntunganPenjualan += parseInt(HppmonthlyTotals[month]);
         }
@@ -586,7 +588,22 @@
           }
           totalPembelian += parseInt(tmpTotal);
         };
-        totalSeluruhPembelian += parseInt(pays.data.total);
+
+        for (const data of totalPurchase.data.response) {
+          let returPurchase = await axios.get(`/api/retur-kas/${data.id}`);
+          let tmpTotal2 = 0;
+          if (returPurchase.data.response.length == 0) {
+            tmpTotal2 = 0;
+            tmpTotal2 += parseInt(data.Total);
+          } else {
+            tmpTotal2 = 0;
+            tmpTotal2 += parseInt(data.Total);
+            returPurchase.data.response.forEach((retur) => {
+              tmpTotal2 += parseInt(retur.Total);
+            });
+          }
+          totalSeluruhPembelian += parseInt(tmpTotal2);
+        };
         
         for (const data of sales.data.response) {
           totalPenjualan += parseInt(data.Total);
@@ -724,7 +741,7 @@
           totalUtang += parseInt(data.Total);
         }));
         let aset = totalDana + ((totalPenjualan + totalRetur) - (totalPembelian + totalOperational));
-        let persedian = totalSeluruhPembelian;
+        let persedian = totalPersediaan + totalSeluruhPembelian -(totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
         let TotalAset = aset + persedian;
         let arrayShow = [["<b>Aset</b>", ""],["Kas", formatCurrency(aset)],["Persediaan", formatCurrency(persedian)],["<b>Total Aset</b>",`<b>${formatCurrency(TotalAset)}</b>`], ["Utang", formatCurrency(totalUtang)], ["<b>Ekuitas</b>", `<b>${formatCurrency(TotalAset - totalUtang)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
@@ -808,7 +825,7 @@
           totalUtang += parseInt(DebtmonthlyTotals[month]);
         };
         let aset = totalDana + ((totalPenjualan + totalRetur) - (totalPembelian + totalOperational));
-        let persedian = totalSeluruhPembelian;
+        let persedian = totalPersediaan + totalSeluruhPembelian -(totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
         let TotalAset = aset + persedian;
         let arrayShow = [["<b>Aset</b>", ""],["Kas", formatCurrency(aset)],["Persediaan", formatCurrency(persedian)],["<b>Total Aset</b>",`<b>${formatCurrency(TotalAset)}</b>`], ["Utang", formatCurrency(totalUtang)], ["<b>Ekuitas</b>", `<b>${formatCurrency(TotalAset - totalUtang)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {

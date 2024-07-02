@@ -31,7 +31,7 @@ const auth = (req,res,next) => {
         else{
             req.session.user = results;
             if(results.Status == 1){
-                res.redirect("/supplier");
+                res.redirect("/sale");
             }else if(results.Status == 2){
                 res.redirect("/product");
             }else{
