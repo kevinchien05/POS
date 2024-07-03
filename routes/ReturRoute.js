@@ -14,7 +14,7 @@ const router = express.Router();
 router.get('/retur', async (req, res) => {
     try {
         let returCount = await Retur.count();
-        const { sort = 'ReturDate', order = 'ASC', search = ''} = req.query;
+        const { sort = 'ReturDate', order = 'DESC', search = ''} = req.query;
         
         const searchCondition = search ? {
             [Op.or]: [

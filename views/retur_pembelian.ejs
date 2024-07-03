@@ -309,7 +309,7 @@
           </div>
           <p id="msg" style="color: red;"></p>
           <div class="button-form">
-            <button class="btn btn-success yes-form-btn" type="button" onclick="save()">Simpan</button>
+            <button class="btn btn-success yes-form-btn" type="button" onclick="save2()">Simpan</button>
             <button type="button" class="btn btn-danger no-form-btn" onclick="closeForm()">Batal</button>
           </div>
         </form>
@@ -355,7 +355,7 @@
         Harga Satuan
       </div>
 
-      <div class="harga-stok" >
+      <div class="harga-stok">
         Harga Total
         <button type="button" class="btn btn-sorting" id=""
           onclick="sortData('Total',`<%= order === 'ASC' ? 'DESC' : 'ASC' %>`)"><svg xmlns="http://www.w3.org/2000/svg"
@@ -403,7 +403,7 @@
         <div class="item-7 centereditem" id="item-7">
           <% for( let j=0; j < returs[i].returproducts.length; j++ ) { %>
             <p id="kode-7">
-              <%= formatRupiah(returs[i].returproducts[j].Price)  %>
+              <%= formatRupiah(returs[i].returproducts[j].Price) %>
             </p>
             <% } %>
         </div>
@@ -488,9 +488,10 @@
                     ProductQnt: pur.Qnt,
                     TotalQnt: pur.product.Qnt,
                     ProductPrice: pur.Price,
-                    ProductUnit : pur.product.Unit,
+                    ProductUnit: pur.product.Unit,
                     ID: pur.id,
-                    PurchasesID: pur.PurchasesID
+                    PurchasesID: pur.PurchasesID,
+                    FullTotal: res.Total
                   });
                   // Membuat baris baru untuk tabel
                   const row = document.createElement('tr');
@@ -499,12 +500,13 @@
                   const cellReturQnt = document.createElement('td');
 
                   cellProductName.innerText = pur.product.ProductName;
-                  cellProductQnt.innerText = `${pur.Qnt} ${pur.product.Unit}` ;
+                  cellProductQnt.innerText = `${pur.Qnt} ${pur.product.Unit}`;
                   cellProductQnt.className = "centered-item";
                   const inputReturQnt = document.createElement('input');
                   inputReturQnt.type = 'text';
                   inputReturQnt.id = `returnQuantityInput_${pur.id}`;
                   inputReturQnt.className = "centered-item";
+                  inputReturQnt.value = 0;
                   cellReturQnt.appendChild(inputReturQnt);
 
                   row.appendChild(cellProductName);
@@ -527,14 +529,13 @@
     }
   </script>
   <script>
-    //simpan ke database
     let total = 0;
-    let purchaseFinalTotal = 0;
+    let purchaseFinalTotal = {};
     let idPurchase;
-    let status = false;
     let save = () => {
-      const products = JSON.parse('<%- JSON.stringify(products)%> ');
+      const products = JSON.parse('<%- JSON.stringify(products) %>');
       total = 0;
+      purchaseFinalTotal = {};
       let isi_id = document.getElementById("kode").value;
       let isi_supplier = document.getElementById("supplier").value;
       let today = new Date();
@@ -542,22 +543,40 @@
       const month = String(today.getMonth() + 1).padStart(2, '0'); // bulan dimulai dari 0
       const day = String(today.getDate()).padStart(2, '0');
       const isi_date = `${year}-${month}-${day}`;
+
+      let hasError = false;
+
+      let purchasesGrouped = {};
+
       results.forEach((res) => {
-        //tambah pengecekan input dengan status
-        let returnQuantityValue = document.getElementById(`returnQuantityInput_${res.ID}`).value;
-        let price = res.ProductPrice;
-        let qnt = res.ProductQnt;
-        let totalQnt = res.TotalQnt;
-        idPurchase = res.PurchasesID;
-        if (returnQuantityValue <= qnt && returnQuantityValue <= totalQnt) {
-          status = true;
-          let tmpTotal = returnQuantityValue * price;
-          total += tmpTotal;
-        } else {
-          status = false;
+        let returnQuantityInput = document.getElementById(`returnQuantityInput_${res.ID}`).value;
+        if (returnQuantityInput !== "") {
+          let returnQuantityValue = parseInt(returnQuantityInput, 10);
+          let price = res.ProductPrice;
+          let qnt = res.ProductQnt;
+          let totalQnt = res.TotalQnt;
+          idPurchase = res.PurchasesID;
+
+          if (returnQuantityValue <= qnt && returnQuantityValue <= totalQnt) {
+            let tmpTotal = returnQuantityValue * price;
+            total += tmpTotal;
+
+            if (!purchasesGrouped[idPurchase]) {
+              purchasesGrouped[idPurchase] = {
+                total: 0,
+                products: []
+              };
+            }
+            purchasesGrouped[idPurchase].total += qnt * price - tmpTotal;
+            purchasesGrouped[idPurchase].products.push({ ...res, returnQuantityValue, tmpTotal });
+
+          } else {
+            hasError = true;
+          }
         }
       });
-      if (status == true) {
+
+      if (!hasError) {
         axios({
           method: 'post',
           url: '/api/retur-purchases',
@@ -569,86 +588,301 @@
             PurchasesID: idPurchase
           }
         }).then(() => {
-          results.forEach((tmp) => {
-            let jumlah = document.getElementById(`returnQuantityInput_${tmp.ID}`).value;
-            let price = tmp.ProductPrice;
-            let Total = jumlah * price;
-            let purchaseQnt = tmp.ProductQnt - jumlah;
-            let purchaseTotal = purchaseQnt * price;
-            purchaseFinalTotal += purchaseTotal;
+          let promises = [];
 
-            axios({
-              method: 'post',
-              url: '/api/retur-returproducts',
-              data: {
-                Qnt: jumlah,
-                Price: price,
-                ProductTotal: Total,
-                ReturID: isi_id,
-                ProductCode: tmp.ProductCode
-              }
-            }).then(() => {
-              axios({
-                method: 'put',
-                url: `/api/retur-purchaseproduct/${tmp.ID}`,
-                data: {
-                  Qnt: purchaseQnt,
-                  Total: purchaseTotal,
-                }
-              }).then(() => {
-                products.forEach((pro) => {
-                  if (pro.ProductCode == tmp.ProductCode) {
-                    qnt = pro.Qnt - jumlah;
-                    let tmpPrice = pro.Qnt * pro.BuyPrice;
-                    price = (tmpPrice - Total) / qnt;
-                    axios({
-                      method: 'put',
-                      url: `/api/purchase-product/${tmp.ProductCode}`,
-                      data: {
-                        ProductQnt: qnt,
-                        BuyPrice: price,
-                      }
-                    }).then(() => {
-                      location.reload();
-                      closeForm();
-                    }).catch((err) => {
-                      alert('Error : ' + err);
-                    });
+          Object.keys(purchasesGrouped).forEach((purchaseId) => {
+            let group = purchasesGrouped[purchaseId];
+            group.products.forEach((tmp) => {
+              let jumlah = tmp.returnQuantityValue;
+              let price = tmp.ProductPrice;
+              let Total = tmp.tmpTotal;
+              let purchaseQnt = tmp.ProductQnt - jumlah;
+              let purchaseTotal = purchaseQnt * price;
+
+              // Save each return product
+              promises.push(
+                axios({
+                  method: 'post',
+                  url: '/api/retur-returproducts',
+                  data: {
+                    Qnt: jumlah,
+                    Price: price,
+                    ProductTotal: Total,
+                    ReturID: isi_id,
+                    ProductCode: tmp.ProductCode
                   }
-                });
-                location.reload();
-                closeForm();
-              }).catch((err) => {
-                alert('Error : ' + err);
-              });
-
-            }).catch((err) => {
-              alert('error' + err);
+                }).then(() => {
+                  // Update the purchase product quantity and total
+                  return axios({
+                    method: 'put',
+                    url: `/api/retur-purchaseproduct/${tmp.ID}`,
+                    data: {
+                      Qnt: purchaseQnt,
+                      Total: purchaseTotal,
+                    }
+                  }).then(() => {
+                    // Update the main product details
+                    let product = products.find(pro => pro.ProductCode === tmp.ProductCode);
+                    if (product) {
+                      let qnt = product.Qnt - jumlah;
+                      let tmpPrice = product.Qnt * product.BuyPrice;
+                      let newPrice = (tmpPrice - Total) / qnt;
+                      return axios({
+                        method: 'put',
+                        url: `/api/retur-product/${tmp.ProductCode}`,
+                        data: {
+                          ProductQnt: qnt,
+                          BuyPrice: newPrice,
+                        }
+                      });
+                    }
+                  });
+                })
+              );
             });
           });
-          axios({
-            method: 'put',
-            url: `/api/retur-purchase/${idPurchase}`,
-            data: {
-              Total: purchaseFinalTotal
-            }
-          }).then(() => {
-            location.reload();
-            closeForm();
+
+          // Wait for all promises to complete
+          Promise.all(promises).then(() => {
+            // Update each purchase total
+            let updatePromises = [];
+            Object.keys(purchasesGrouped).forEach((id) => {
+              updatePromises.push(
+                axios({
+                  method: 'put',
+                  url: `/api/retur-purchase/${id}`,
+                  data: {
+                    Total: purchasesGrouped[id].total
+                  }
+                })
+              );
+            });
+
+            // Wait for all updates to complete
+            Promise.all(updatePromises).then(() => {
+              alert("Data retur baru berhasil ditambahkan!");
+              location.reload();
+              closeForm();
+            }).catch((err) => {
+              alert('Error updating purchases: ' + err);
+            });
           }).catch((err) => {
-            alert('Error : ' + err);
+            alert('Error saving return products: ' + err);
           });
-          alert("Data retur baru berhasil ditambahkan!");
-          location.reload();
         }).catch((err) => {
-          alert('error' + err);
+          alert('Error creating return purchase: ' + err);
         });
       } else {
-        document.getElementById('msg').innerText = "Stok Tidak Cukup";
+        document.getElementById('msg').innerText = "Input tidak valid atau stok tidak cukup";
       }
+    }
+  </script>
+  <script>
+    let save2 = () => {
+      const products = JSON.parse('<%- JSON.stringify(products) %>');
+      total = 0;
+      let isi_id = document.getElementById("kode").value;
+      let isi_supplier = document.getElementById("supplier").value;
+      let today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // bulan dimulai dari 0
+      const day = String(today.getDate()).padStart(2, '0');
+      const isi_date = `${year}-${month}-${day}`;
 
+      let hasError = false;
+      let purchasesGrouped = {};
 
+      // Group products by PurchasesID and calculate totals
+      results.forEach((res) => {
+        let returnQuantityInput = document.getElementById(`returnQuantityInput_${res.ID}`).value;
+        if (returnQuantityInput !== "") {
+          let returnQuantityValue = parseInt(returnQuantityInput, 10);
+          let price = res.ProductPrice;
+          let qnt = res.ProductQnt;
+          let totalQnt = res.TotalQnt;
+          let idPurchase = res.PurchasesID;
 
+          if (returnQuantityValue <= qnt && returnQuantityValue <= totalQnt) {
+            let tmpTotal = returnQuantityValue * price;
+            total += tmpTotal;
+
+            if (!purchasesGrouped[idPurchase]) {
+              purchasesGrouped[idPurchase] = {
+                total: 0,
+                products: []
+              };
+            }
+            purchasesGrouped[idPurchase].total += qnt * price - tmpTotal;
+            purchasesGrouped[idPurchase].products.push({ ...res, returnQuantityValue, tmpTotal });
+
+          } else {
+            hasError = true;
+          }
+        }
+      });
+
+      if (!hasError) {
+        // Calculate new Qnt and BuyPrice for each product
+        let productUpdates = {};
+        Object.keys(purchasesGrouped).forEach((purchaseId) => {
+          purchasesGrouped[purchaseId].products.forEach((tmp) => {
+            let jumlah = tmp.returnQuantityValue;
+            let price = tmp.ProductPrice;
+            let Total = tmp.tmpTotal;
+
+            // Update product data
+            if (!productUpdates[tmp.ProductCode]) {
+              productUpdates[tmp.ProductCode] = {
+                newQnt: 0,
+                newTotalPrice: 0
+              };
+            }
+            productUpdates[tmp.ProductCode].newQnt += jumlah;
+            productUpdates[tmp.ProductCode].newTotalPrice += Total;
+          });
+        });
+
+        let updatePromises = [];
+
+        // Update each product with new Qnt and BuyPrice
+        Object.keys(productUpdates).forEach((productCode) => {
+          let product = products.find(pro => pro.ProductCode === productCode);
+          if (product) {
+            let { newQnt, newTotalPrice } = productUpdates[productCode];
+            let currentQnt = product.Qnt;
+            let currentTotalPrice = currentQnt * product.BuyPrice;
+
+            let updatedQnt = currentQnt - newQnt;
+            let updatedBuyPrice = (currentTotalPrice - newTotalPrice) / updatedQnt;
+
+            // Push update promise
+            updatePromises.push(
+              axios({
+                method: 'put',
+                url: `/api/retur-product/${productCode}`,
+                data: {
+                  ProductQnt: updatedQnt,
+                  BuyPrice: updatedBuyPrice
+                }
+              })
+            );
+          }
+        });
+
+        // Wait for all product updates to complete
+        Promise.all(updatePromises).then(() => {
+          // Create return purchase
+          let createReturnPurchasePromises = [];
+
+          Object.keys(purchasesGrouped).forEach((purchaseId) => {
+            createReturnPurchasePromises.push(
+              axios({
+                method: 'post',
+                url: '/api/retur-purchases',
+                data: {
+                  id: isi_id,
+                  ReturDate: isi_date,
+                  Total: total,
+                  SupplierID: isi_supplier,
+                  PurchasesID: purchaseId
+                }
+              })
+            );
+          });
+
+          // Wait for all retur-purchases promises to complete
+          Promise.all(createReturnPurchasePromises).then(() => {
+            let returPromises = [];
+
+            // Push retur product promises
+            Object.keys(purchasesGrouped).forEach((purchaseId) => {
+              let group = purchasesGrouped[purchaseId];
+              group.products.forEach((tmp) => {
+                let jumlah = tmp.returnQuantityValue;
+                let price = tmp.ProductPrice;
+                let Total = tmp.tmpTotal;
+
+                returPromises.push(
+                  axios({
+                    method: 'post',
+                    url: '/api/retur-returproducts',
+                    data: {
+                      Qnt: jumlah,
+                      Price: price,
+                      ProductTotal: Total,
+                      ReturID: isi_id,
+                      ProductCode: tmp.ProductCode
+                    }
+                  })
+                );
+              });
+            });
+
+            // Wait for all retur product promises to complete
+            Promise.all(returPromises).then(() => {
+              let purchaseProductUpdatePromises = [];
+
+              // Push update for retur-purchaseproduct
+              Object.keys(purchasesGrouped).forEach((purchaseId) => {
+                let group = purchasesGrouped[purchaseId];
+                group.products.forEach((tmp) => {
+                  let jumlah = tmp.returnQuantityValue;
+                  let price = tmp.ProductPrice;
+                  let purchaseQnt = tmp.ProductQnt - jumlah;
+                  let purchaseTotal = purchaseQnt * price;
+
+                  purchaseProductUpdatePromises.push(
+                    axios({
+                      method: 'put',
+                      url: `/api/retur-purchaseproduct/${tmp.ID}`,
+                      data: {
+                        Qnt: purchaseQnt,
+                        Total: purchaseTotal
+                      }
+                    })
+                  );
+                });
+              });
+
+              // Wait for all purchase product updates to complete
+              Promise.all(purchaseProductUpdatePromises).then(() => {
+                // Update each purchase total
+                let updatePurchasePromises = [];
+                Object.keys(purchasesGrouped).forEach((id) => {
+                  updatePurchasePromises.push(
+                    axios({
+                      method: 'put',
+                      url: `/api/retur-purchase/${id}`,
+                      data: {
+                        Total: purchasesGrouped[id].total
+                      }
+                    })
+                  );
+                });
+
+                // Wait for all updates to complete
+                Promise.all(updatePurchasePromises).then(() => {
+                  alert("Data retur baru berhasil ditambahkan!");
+                  location.reload();
+                  closeForm();
+                }).catch((err) => {
+                  alert('Error updating purchases: ' + err);
+                });
+              }).catch((err) => {
+                alert('Error updating purchase products: ' + err);
+              });
+            }).catch((err) => {
+              alert('Error creating return products: ' + err);
+            });
+          }).catch((err) => {
+            alert('Error creating return purchase: ' + err);
+          });
+        }).catch((err) => {
+          alert('Error updating products: ' + err);
+        });
+      } else {
+        document.getElementById('msg').innerText = "Input tidak valid atau stok tidak cukup";
+      }
     }
   </script>
   <script>

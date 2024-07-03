@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.get('/fund', (req, res) => {
     try {
-        const { sort = 'Date', order = 'ASC', search = '' } = req.query;
+        const { sort = 'Date', order = 'DESC', search = '' } = req.query;
 
         const searchCondition = search ? {
             [Op.or]: [
