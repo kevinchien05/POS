@@ -328,62 +328,13 @@
   <script>
     choose_Kas = 0;
     // Judul Data inside for
-    const veryHeadTitle = ["Arus Kas", "Laba/Rugi", "Neraca"];
+    const veryHeadTitle = ["Neraca", "Laba/Rugi", "Arus Kas"];
 
     // Data for pembelian
     const judulPembelianData = [
       { titleTgl: '', titleSupplier: '', titleBiaya: '', titleTotalBiaya: '' }
     ];
-    const judulPembelianData2 = [
-      { titleTgl: 'Keuntungan Penjualan', titleSupplier: '', titleBiaya: '', titleTotalBiaya: 'Total Biaya' }
-    ];
-    const judulPembelianDataTahunan = [
-      { titleTgl: 'Tanggal', titleSupplier: '', titleBiaya: '', titleTotalBiaya: 'Total Biaya' }
-    ];
 
-    // Data for penjualan
-    const judulPenjualanData = [
-      { titleTgl: 'Tanggal', titleProduk: 'Produk', titleKuantitas: 'Kuantitas', titleHargaTotal: 'Harga Total' }
-    ];
-    const judulPenjualanDataTahunan = [
-      { titleTgl: 'Tanggal', titleProduk: '', titleKuantitas: '', titleHargaTotal: 'Harga Total' }
-    ];
-
-    // Data for Operasional
-    const judulOperasionalData = [
-      { titleTgl: 'Tanggal', titleDeskripsi: 'Deskripsi', titleStatus: 'Status', titleBiaya: 'Biaya' }
-    ];
-    const judulOperasionalDataTahunana = [
-      { titleTgl: 'Tanggal', titleDeskripsi: '', titleStatus: '', titleBiaya: 'Biaya' }
-    ];
-
-    // Data for Utang
-    const judulUtangData = [
-      { titleTgl: 'Tanggal', titleSupplier: 'Supplier', titleBiaya: 'Biaya', titleTotalBiaya: 'Total Biaya' }
-    ];
-    const judulUtangDataTahunan = [
-      { titleTgl: 'Tanggal', titleSupplier: '', titleBiaya: '', titleTotalBiaya: 'Total Biaya' }
-    ];
-
-    // Data for Retur
-    const judulReturData = [
-      { titleTgl: 'Tanggal', titleProduk: 'Produk', titleKuantitas: 'Kuantitas', titleHargaTotal: 'Harga Total' }
-    ];
-    const judulReturDataTahunan = [
-      { titleTgl: 'Tanggal', titleProduk: '', titleKuantitas: '', titleHargaTotal: 'Harga Total' }
-    ];
-
-    // Data for Dana
-    const judulDanaData = [
-      { titleTgl: 'Tanggal', titleDeskripsi: 'Deskripsi', titleStatus: 'Status', titleBiaya: 'Biaya' }
-    ];
-    const judulDanaDataTahunana = [
-      { titleTgl: 'Tanggal', titleDeskripsi: '', titleStatus: '', titleBiaya: 'Biaya' }
-    ];
-
-    const judulHasilData = [
-      { titleTgl: 'Deskripsi', titleProduk: '', titleKuantitas: '', titleHargaTotal: 'Total' }
-    ];
     // Function to generate initial structure
     function generateInitialStructure() {
       const allDetailDiv = document.getElementById('all-detail');
@@ -423,7 +374,6 @@
         day = String(date.getDate()).padStart(2, '0'); const month = String(date.getMonth() + 1).padStart(2, '0'); const
           year = date.getFullYear(); return `${day}-${month}-${year}`;
     }
-
     async function build_up_things() {
       document.getElementById("msg").innerHTML = "";
       document.getElementById('all-detail').innerHTML = "";
@@ -437,13 +387,13 @@
         const today = new Date();
         const todayMonth = today.getMonth();
         const todayYear = today.getFullYear();
-        debtDate = new Date(2024,0,0);
+        debtDate = new Date(2024, 0, 0);
         startDate = new Date(year, month - 1, 1);
         month = parseInt(month) + 1;
         endDate = new Date(year, month - 1, 1);
       } else {
         let year = document.getElementById('disabledTahun').value;
-        debtDate = new Date(2024,0,0);
+        debtDate = new Date(2024, 0, 0);
         startDate = new Date(year, 0, 0);
         endDate = new Date(year, 12, 1);
       }
@@ -454,7 +404,7 @@
       const debts = await axios.get(`/api/debt/${debtDate}/${endDate}`);
       const returs = await axios.get(`/api/retur-kas/${startDate}/${endDate}`);
       const funds = await axios.get(`/api/fund/${startDate}/${endDate}`);
-      const pays = await axios.get(`/api/pay`);
+      const pays = await axios.get(`/api/pay/${startDate}/${endDate}`);
       console.log(pays);
       if (purchases.data.response.length != 0 || sales.data.response.length != 0 || operationals.data.response.length != 0 || debts.data.response.length != 0 || returs.data.response.length != 0 || funds.data.response.length != 0) {
         for (var count_title = 1; count_title <= 3; count_title++) {
@@ -479,11 +429,11 @@
           const tfoot = document.querySelector(`#sales-table-${count_title} tfoot`);
           document.getElementById(`text-form-pembelian-${count_title}`).innerHTML = veryHeadTitle[count_title - 1];
           if (count_title == 1) {
-            await generateArusRows(thead, tbody, tfoot, sales, returs, purchases, operationals, totalPurchases, pays);
+            await generateArusRows(thead, tbody, tfoot, sales, returs, purchases, operationals, totalPurchases, pays, funds, debts);
           } else if (count_title == 2) {
-            await generateLabaRows(thead, tbody, tfoot, operationals);
+            await generateLabaRows(thead, tbody, tfoot);
           } else {
-            await generateNeracaRows(thead, tbody, tfoot, funds, debts);
+            await generateNeracaRows(thead, tbody, tfoot);
           }
         };
       } else {
@@ -493,7 +443,7 @@
     };
 
     // Function to generate pembelian table rows
-    async function generateArusRows(x, y, z, sales, returs, purchases, operationals,totalPurchase, pays) {
+    async function generateArusRows(x, y, z, sales, returs, purchases, operationals, totalPurchase, pays, funds, debts) {
       const thead1 = x;
       const tbody1 = y;
       const tfoot1 = z;
@@ -503,6 +453,9 @@
       totalPenjualan = 0;
       totalRetur = 0;
       totalKeuntunganPenjualan = 0;
+      totalDana = 0;
+      totalUtang = 0;
+      totalPersediaan = 0;     
 
       if (choose_Kas == 1) {
         judulPembelianData.forEach(data => {
@@ -525,10 +478,13 @@
         const ReturmonthlyTotals = returs.data.total;
         const SalemonthlyTotals = sales.data.total;
         const HppmonthlyTotals = sales.data.hpp;
+        const FundmonthlyTotals = funds.data.total;
+        const SupplymonthlyTotals = funds.data.supplies;
+        const DebtmonthlyTotals = debts.data.total;
         for (const month in PurmonthlyTotals) {
           totalPembelian += parseInt(PurmonthlyTotals[month]);
         }
-        for (const month in TotalmonthlyTotals){
+        for (const month in TotalmonthlyTotals) {
           totalSeluruhPembelian += parseInt(TotalmonthlyTotals[month]);
         }
         for (const month in HppmonthlyTotals) {
@@ -543,7 +499,19 @@
         for (const month in SalemonthlyTotals) {
           totalPenjualan += parseInt(SalemonthlyTotals[month]);
         }
-        let arrayShow = [["<b>Dana Masuk</b>", ""], ["Penjualan Barang", formatCurrency(totalPenjualan)], ["Retur Barang", formatCurrency(totalRetur)], ["<b>Total Dana Masuk</b>", `<b>${formatCurrency(totalPenjualan + totalRetur)}</b>`], ["<b>Dana Keluar</b>", ""], ["Total Pembelian", formatCurrency(totalPembelian)], ["Beban Operasional", formatCurrency(totalOperational)], ["<b>Total Dana Keluar<b/>", `<b>${formatCurrency(totalPembelian + totalOperational)}</b>`], ["<b>Kas Bersih</b>", `<b>${formatCurrency((totalPenjualan + totalRetur) - (totalPembelian + totalOperational))}</b>`]];
+        for (const month in FundmonthlyTotals) {
+          totalDana += parseInt(FundmonthlyTotals[month]);
+        };
+        for (const month in SupplymonthlyTotals) {
+          totalPersediaan += parseInt(SupplymonthlyTotals[month]);
+        };
+        for (const month in DebtmonthlyTotals) {
+          totalUtang += parseInt(DebtmonthlyTotals[month]);
+        };
+        let aset = totalDana + ((totalPenjualan + totalRetur) - (totalPembelian + totalOperational));
+        let persedian = totalPersediaan + totalSeluruhPembelian - (totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
+        let TotalAset = aset + persedian;
+        let arrayShow = [["<b>Aset</b>", ""], ["Kas dan setara kas", formatCurrency(aset)], ["Persediaan", formatCurrency(persedian)], ["<b>Jumlah Aset</b>", `<b>${formatCurrency(TotalAset)}</b>`], ["Utang Usaha", formatCurrency(totalUtang)], ["<b>Jumlah Ekuitas</b>", `<b>${formatCurrency(TotalAset - totalUtang)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
           const tanggalCell = document.createElement('td');
@@ -574,20 +542,25 @@
           giveBreak(thead1);
         });
         for (const data of purchases.data.response) {
-          let returPurchase = await axios.get(`/api/retur-kas/${data.id}`);
-          let tmpTotal = 0;
-          if (returPurchase.data.response.length == 0) {
-            tmpTotal = 0;
-            tmpTotal += parseInt(data.Total);
-          } else {
-            tmpTotal = 0;
-            tmpTotal += parseInt(data.Total);
-            returPurchase.data.response.forEach((retur) => {
-              tmpTotal += parseInt(retur.Total);
-            });
+          if (data.Status == 0) {
+            let returPurchase = await axios.get(`/api/retur-kas/${data.id}`);
+            let tmpTotal = 0;
+            if (returPurchase.data.response.length == 0) {
+              tmpTotal = 0;
+              tmpTotal += parseInt(data.Total);
+            } else {
+              tmpTotal = 0;
+              tmpTotal += parseInt(data.Total);
+              returPurchase.data.response.forEach((retur) => {
+                tmpTotal += parseInt(retur.Total);
+              });
+            }
+            totalPembelian += parseInt(tmpTotal);
           }
-          totalPembelian += parseInt(tmpTotal);
         };
+        for (const data of pays.data.response) {
+          totalPembelian += parseInt(data.purchase.Total)
+        }
 
         for (const data of totalPurchase.data.response) {
           let returPurchase = await axios.get(`/api/retur-kas/${data.id}`);
@@ -604,7 +577,7 @@
           }
           totalSeluruhPembelian += parseInt(tmpTotal2);
         };
-        
+
         for (const data of sales.data.response) {
           totalPenjualan += parseInt(data.Total);
           data.saleproducts.forEach((pro) => {
@@ -616,8 +589,20 @@
         };
         for (const data of operationals.data.response) {
           totalOperational += parseInt(data.Total);
-        }
-        let arrayShow = [["<b>Dana Masuk</b>", ""], ["Penjualan Barang", formatCurrency(totalPenjualan)], ["Retur Barang", formatCurrency(totalRetur)], ["<b>Total Dana Masuk</b>", `<b>${formatCurrency(totalPenjualan + totalRetur)}</b>`], ["<b>Dana Keluar</b>", ""], ["Total Pembelian", formatCurrency(totalPembelian)], ["Beban Operasional", formatCurrency(totalOperational)], ["<b>Total Dana Keluar<b/>", `<b>${formatCurrency(totalPembelian + totalOperational)}</b>`], ["<b>Kas Bersih</b>", `<b>${formatCurrency((totalPenjualan + totalRetur) - (totalPembelian + totalOperational))}</b>`]];
+        };
+        for (const data of funds.data.response){
+          if(data.Status == 0 || data.Status ==1){
+            totalDana += parseInt(data.Total);
+            totalPersediaan += parseInt(data.Supply)
+          }
+        };
+        for (const data of debts.data.response) {
+          totalUtang += parseInt(data.Total);
+        };
+        let aset = totalDana + ((totalPenjualan + totalRetur) - (totalPembelian + totalOperational));
+        let persedian = totalPersediaan + totalSeluruhPembelian - (totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
+        let TotalAset = aset + persedian;
+        let arrayShow = [["<b>Aset</b>", ""], ["Kas dan setara kas", formatCurrency(aset)], ["Persediaan", formatCurrency(persedian)], ["<b>Jumlah Aset</b>", `<b>${formatCurrency(TotalAset)}</b>`], ["Utang Usaha", formatCurrency(totalUtang)], ["<b>Jumlah Ekuitas</b>", `<b>${formatCurrency(TotalAset - totalUtang)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
           const tanggalCell = document.createElement('td');
@@ -638,7 +623,7 @@
     };
 
     // Function to generate penjualan table rows
-    function generateLabaRows(x, y, z, operationals) {
+    function generateLabaRows(x, y, z) {
       const thead2 = x;
       const tbody2 = y;
       const tfoot2 = z;
@@ -658,7 +643,7 @@
           thead2.appendChild(baris);
           giveBreak(thead2);
         });
-        let arrayShow = [["Pendapatan", formatCurrency(totalPenjualan)], ["Harga Pokok Penjualan", formatCurrency(totalPenjualan - totalKeuntunganPenjualan)], ["<b>Laba Kotor</b>", `<b>${formatCurrency(totalKeuntunganPenjualan)}</b>`], ["Beban Usaha", formatCurrency(totalOperational)], ["<b>Laba Bersih</b>", `<b>${formatCurrency(totalKeuntunganPenjualan - totalOperational)}</b>`]];
+        let arrayShow = [["Penjualan", formatCurrency(totalPenjualan)], ["Harga Pokok Penjualan", formatCurrency(totalPenjualan - totalKeuntunganPenjualan)], ["<b>Laba Kotor</b>", `<b>${formatCurrency(totalKeuntunganPenjualan)}</b>`], ["Beban Usaha", formatCurrency(totalOperational)], ["<b>Laba Bersih</b>", `<b>${formatCurrency(totalKeuntunganPenjualan - totalOperational)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
           const tanggalCell = document.createElement('td');
@@ -688,7 +673,7 @@
           thead2.appendChild(baris);
           giveBreak(thead2);
         });
-        let arrayShow = [["Pendapatan", formatCurrency(totalPenjualan)], ["Harga Pokok Penjualan", formatCurrency(totalPenjualan - totalKeuntunganPenjualan)], ["<b>Laba Kotor</b>", `<b>${formatCurrency(totalKeuntunganPenjualan)}</b>`], ["Beban Usaha", formatCurrency(totalOperational)], ["<b>Laba Bersih</b>", `<b>${formatCurrency(totalKeuntunganPenjualan - totalOperational)}</b>`]];
+        let arrayShow = [["Penjualan", formatCurrency(totalPenjualan)], ["Harga Pokok Penjualan", formatCurrency(totalPenjualan - totalKeuntunganPenjualan)], ["<b>Laba Bruto</b>", `<b>${formatCurrency(totalKeuntunganPenjualan)}</b>`], ["Beban Usaha", formatCurrency(totalOperational)], ["<b>Laba Usaha</b>", `<b>${formatCurrency(totalKeuntunganPenjualan - totalOperational)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
           const tanggalCell = document.createElement('td');
@@ -712,9 +697,6 @@
       const thead3 = x;
       const tbody3 = y;
       const tfoot3 = z;
-      totalDana = 0;
-      totalUtang = 0;
-      totalPersediaan = 0;
 
       if (choose_Kas == 0) {
         judulPembelianData.forEach(data => {
@@ -731,19 +713,9 @@
           thead3.appendChild(baris);
           giveBreak(thead3);
         });
-        funds.data.response.forEach(data => {
-          if (data.Status == 0 || data.Status == 1) {
-            totalDana += parseInt(data.Total);
-            totalPersediaan += parseInt(data.Supply);
-          };
-        });
-        debts.data.response.forEach((data => {
-          totalUtang += parseInt(data.Total);
-        }));
         let aset = totalDana + ((totalPenjualan + totalRetur) - (totalPembelian + totalOperational));
-        let persedian = totalPersediaan + totalSeluruhPembelian -(totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
-        let TotalAset = aset + persedian;
-        let arrayShow = [["<b>Aset</b>", ""],["Kas", formatCurrency(aset)],["Persediaan", formatCurrency(persedian)],["<b>Total Aset</b>",`<b>${formatCurrency(TotalAset)}</b>`], ["Utang", formatCurrency(totalUtang)], ["<b>Ekuitas</b>", `<b>${formatCurrency(TotalAset - totalUtang)}</b>`]];
+        let persedian = totalPersediaan + totalSeluruhPembelian - (totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
+        let arrayShow = [["Penerimaan dari pelanggan", formatCurrency(totalPenjualan)], ["Penerimaan kembali", formatCurrency(totalRetur)], ["Pembayaran kepada pemasok", formatCurrency(totalPembelian)], ["Pembayaran beban usaha", formatCurrency(totalOperational)], ["<b>Arus kas neto</b>", `<b>${formatCurrency((totalPenjualan + totalRetur) - (totalPembelian + totalOperational))}</b>`],["<b>Kas dan setara kas awal bulan</b>",`<b>${formatCurrency(totalDana)}</b>`],["<b>Kas dan setara kas akhir bulan</b>",`<b>${formatCurrency(aset)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
           const tanggalCell = document.createElement('td');
@@ -811,23 +783,9 @@
           thead3.appendChild(baris);
           giveBreak(thead3);
         });
-
-        const FundmonthlyTotals = funds.data.total;
-        const SupplymonthlyTotals = funds.data.supplies;
-        const DebtmonthlyTotals = debts.data.total;
-        for (month in FundmonthlyTotals) {
-          totalDana += parseInt(FundmonthlyTotals[month]);
-        };
-        for (month in SupplymonthlyTotals) {
-          totalPersediaan += parseInt(SupplymonthlyTotals[month]);
-        };
-        for (month in DebtmonthlyTotals) {
-          totalUtang += parseInt(DebtmonthlyTotals[month]);
-        };
         let aset = totalDana + ((totalPenjualan + totalRetur) - (totalPembelian + totalOperational));
-        let persedian = totalPersediaan + totalSeluruhPembelian -(totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
-        let TotalAset = aset + persedian;
-        let arrayShow = [["<b>Aset</b>", ""],["Kas", formatCurrency(aset)],["Persediaan", formatCurrency(persedian)],["<b>Total Aset</b>",`<b>${formatCurrency(TotalAset)}</b>`], ["Utang", formatCurrency(totalUtang)], ["<b>Ekuitas</b>", `<b>${formatCurrency(TotalAset - totalUtang)}</b>`]];
+        let persedian = totalPersediaan + totalSeluruhPembelian - (totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
+        let arrayShow = [["Penerimaan dari pelanggan", formatCurrency(totalPenjualan)], ["Penerimaan kembali", formatCurrency(totalRetur)], ["Pembayaran kepada pemasok", formatCurrency(totalPembelian)], ["Pembayaran beban usaha", formatCurrency(totalOperational)], ["<b>Arus kas neto</b>", `<b>${formatCurrency((totalPenjualan + totalRetur) - (totalPembelian + totalOperational))}</b>`],["<b>Kas dan setara kas awal tahun</b>",`<b>${formatCurrency(totalDana)}</b>`],["<b>Kas dan setara kas akhir tahun</b>",`<b>${formatCurrency(aset)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
           const tanggalCell = document.createElement('td');

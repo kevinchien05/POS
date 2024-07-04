@@ -14,7 +14,7 @@ const router = express.Router();
 router.get('/retur', async (req, res) => {
     try {
         let returCount = await Retur.count();
-        const { sort = 'ReturDate', order = 'DESC', search = ''} = req.query;
+        const { sort = 'id', order = 'DESC', search = ''} = req.query;
         
         const searchCondition = search ? {
             [Op.or]: [
@@ -35,7 +35,7 @@ router.get('/retur', async (req, res) => {
             order: orderCondition,
             include: [
                 { model: ReturProduct, include: [{ model: Product }] },
-                { model: Supplier }, { model: Purchase }]
+                { model: Supplier }]
         }).then((results) => {
             Supplier.findAll().then((sup) => {
                 Product.findAll().then((pro) => {
@@ -75,7 +75,7 @@ router.get('/api/retur/:id/:date', async (req, res) => {
 
 //tambah table returpurchases
 router.post('/api/retur-purchases', (req, res) => {
-    Retur.create({ id: req.body.id, ReturDate: req.body.ReturDate, Total: req.body.Total, SupplierID: req.body.SupplierID, PurchasesID: req.body.PurchasesID }
+    Retur.create({ id: req.body.id, ReturDate: req.body.ReturDate, Total: req.body.Total, SupplierID: req.body.SupplierID }
     ).then((results) => {
         res.json({ status: 200, error: null, Response: results });
     }).catch(err => {
@@ -85,7 +85,7 @@ router.post('/api/retur-purchases', (req, res) => {
 
 //tambah table returproducts
 router.post('/api/retur-returproducts', (req, res) => {
-    ReturProduct.create({ Qnt: req.body.Qnt, Price: req.body.Price, Total: req.body.ProductTotal, ReturID: req.body.ReturID, ProductCode: req.body.ProductCode }
+    ReturProduct.create({ Qnt: req.body.Qnt, Price: req.body.Price, Total: req.body.ProductTotal, ReturID: req.body.ReturID, ProductCode: req.body.ProductCode, PurchasesID: req.body.PurchasesID }
     ).then((results) => {
         res.json({ status: 200, error: null, Response: results });
     }).catch(err => {

@@ -4,6 +4,7 @@ import PurchaseProduct from "./purchaseProduct.js";
 
 
 const Purchase = sequelize.define('purchase', {
+    id: {type: DataTypes.STRING, allowNull: false, primaryKey: true},
     OrderDate: {type: DataTypes.DATE, allowNull: false},
     Total: {type: DataTypes.DECIMAL, allowNull: false},
     Status: {type: DataTypes.TINYINT, allowNull: false},

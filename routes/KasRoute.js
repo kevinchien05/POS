@@ -33,7 +33,7 @@ router.get('/api/totalpurchase/:startDate/:endDate', async (req, res) => {
     });
     const monthlyTotals = {};
     const returPromises = purchases.map(async (purchase) => {
-        const returs = await Retur.findAll({
+        const returs = await ReturProduct.findAll({
             where: {
                 PurchasesID: purchase.id
             }
@@ -52,43 +52,18 @@ router.get('/api/totalpurchase/:startDate/:endDate', async (req, res) => {
     res.json({ status: 200, error: null, response: purchases, total: monthlyTotals });
 });
 
-router.get('/api/pay', (req, res) => {
-    Product.findAll().then((results) => {
-        let totalItem = 0;
-
-        results.forEach((product) => {
-            totalItem += parseInt(product.Qnt) * parseInt(product.BuyPrice);
-        })
-        res.json({ status: 200, error: null, response: results, total: totalItem });
+router.get('/api/pay/:startDate/:endDate', (req, res) => {
+    Debt.findAll({
+        where: { 
+            PayDate: { 
+                [Op.between]: [req.params.startDate, req.params.endDate] 
+            } 
+        }, include: [
+            {model: Purchase}
+        ]
+    }).then((results) => {
+        res.json({ status: 200, error: null, response: results});
     });
-});
-
-router.get('/api/pay2/:startDate/:endDate', async (req, res) => {
-    try {
-        const Purchases = await Purchase.findAll({
-            where: {
-                OrderDate: {
-                    [Op.between]: [req.params.startDate, req.params.endDate]
-                }
-            }
-        });
-        const PurchasesID = Purchases.map(purchase => purchase.id);
-
-        const results = await Debt.findAll({
-            where: {
-                PayDate: {
-                    [Op.between]: [req.params.startDate, req.params.endDate]
-                },
-                PurchasesID: {
-                    [Op.notIn]: PurchasesID
-                }
-            },
-            include: [{ model: Purchase }]
-        });
-        res.json({ status: 200, error: null, response: results });
-    } catch (error) {
-        res.json({ status: 500, error: error.message, response: null });
-    }
 });
 
 router.get('/api/purchase/:startDate/:endDate', async (req, res) => {
@@ -107,7 +82,7 @@ router.get('/api/purchase/:startDate/:endDate', async (req, res) => {
     });
     const monthlyTotals = {};
     const returPromises = purchases.map(async (purchase) => {
-        const returs = await Retur.findAll({
+        const returs = await ReturProduct.findAll({
             where: {
                 PurchasesID: purchase.id
             }
@@ -249,7 +224,7 @@ router.get('/api/retur-kas/:startDate/:endDate', (req, res) => {
         },
         include: [
             { model: ReturProduct, include: [{ model: Product }] },
-            { model: Supplier }, { model: Purchase }
+            { model: Supplier }
         ]
     }).then((results) => {
         const monthlyTotals = {};
@@ -267,12 +242,8 @@ router.get('/api/retur-kas/:startDate/:endDate', (req, res) => {
 });
 
 router.get('/api/retur-kas/:kode', (req, res) => {
-    Retur.findAll({
+    ReturProduct.findAll({
         where: { PurchasesID: req.params.kode },
-        include: [
-            { model: ReturProduct, include: [{ model: Product }] },
-            { model: Supplier }, { model: Purchase }
-        ]
     }).then((results) => {
         res.json({ status: 200, error: null, response: results });
     });

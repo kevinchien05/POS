@@ -6,7 +6,7 @@ const PurchaseProduct = sequelize.define('purchaseproduct', {
     Qnt: { type: DataTypes.INTEGER, allowNull: false },
     Price: { type: DataTypes.DECIMAL, allowNull: false },
     Total: { type: DataTypes.DECIMAL, allowNull: false },
-    PurchasesID: { type: DataTypes.INTEGER, allowNull: false },
+    PurchasesID: { type: DataTypes.STRING, allowNull: false },
     ProductCode: { type: DataTypes.STRING, allowNull: false }
 }, {
     updatedAt: false,

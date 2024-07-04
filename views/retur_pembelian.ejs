@@ -291,11 +291,13 @@
             <table id="resultTable">
               <thead>
                 <tr>
+                  <th class="qtytableforproduct">Kode Pembelian</th>
                   <th class="nametableforproduct">Produk</th>
                   <th class="qtytableforproduct">Total Kuantitas</th>
                   <th class="centered-item">Kuantitas Retur</th>
                 </tr>
                 <tr class="separated">
+                  <td></td>
                   <td></td>
                   <td></td>
                   <td></td>
@@ -341,6 +343,10 @@
       </div>
 
       <div class="jumlah-stok-retur">
+        Kode Pembelian
+      </div>
+
+      <div class="jumlah-stok-retur">
         Retur Produk
       </div>
 
@@ -382,28 +388,45 @@
         <div class="item centereditem" id="item">
           <% for( let j=0; j < returs[i].returproducts.length; j++ ) { %>
             <p id="kode">
-              <%= returs[i].returproducts[j].product.ProductName %>
-            </p>
-            <% } %>
-        </div>
-        <div class="item-4 centereditem" id="item-4">
-          <% for( let j=0; j < returs[i].returproducts.length; j++ ) { %>
-            <p id="kode-4">
-              <%= returs[i].returproducts[j].Qnt %>
+              <% if (returs[i].returproducts[j].Qnt !=0) { %>
+                <%= returs[i].returproducts[j].PurchasesID %>
+                  <% } %>
             </p>
             <% } %>
         </div>
         <div class="item centereditem" id="item">
           <% for( let j=0; j < returs[i].returproducts.length; j++ ) { %>
             <p id="kode">
-              <%= returs[i].returproducts[j].product.Unit %>
+              <% if (returs[i].returproducts[j].Qnt !=0) { %>
+                <%= returs[i].returproducts[j].product.ProductName %>
+                  <% } %>
+            </p>
+            <% } %>
+        </div>
+        <div class="item-4 centereditem" id="item-4">
+          <% for( let j=0; j < returs[i].returproducts.length; j++ ) { %>
+            <p id="kode-4">
+              <% if (returs[i].returproducts[j].Qnt !=0) { %>
+                <%= returs[i].returproducts[j].Qnt %>
+                  <% } %>
+            </p>
+            <% } %>
+        </div>
+        <div class="item centereditem" id="item">
+          <% for( let j=0; j < returs[i].returproducts.length; j++ ) { %>
+            <p id="kode">
+              <% if (returs[i].returproducts[j].Qnt !=0) { %>
+                <%= returs[i].returproducts[j].product.Unit %>
+                  <% } %>
             </p>
             <% } %>
         </div>
         <div class="item-7 centereditem" id="item-7">
           <% for( let j=0; j < returs[i].returproducts.length; j++ ) { %>
             <p id="kode-7">
-              <%= formatRupiah(returs[i].returproducts[j].Price) %>
+              <% if (returs[i].returproducts[j].Qnt !=0) { %>
+                <%= formatRupiah(returs[i].returproducts[j].Price) %>
+                  <% } %>
             </p>
             <% } %>
         </div>
@@ -495,10 +518,12 @@
                   });
                   // Membuat baris baru untuk tabel
                   const row = document.createElement('tr');
+                  const cellPurchase = document.createElement('td');
                   const cellProductName = document.createElement('td');
                   const cellProductQnt = document.createElement('td');
                   const cellReturQnt = document.createElement('td');
 
+                  cellPurchase.innerText = pur.PurchasesID;
                   cellProductName.innerText = pur.product.ProductName;
                   cellProductQnt.innerText = `${pur.Qnt} ${pur.product.Unit}`;
                   cellProductQnt.className = "centered-item";
@@ -509,6 +534,7 @@
                   inputReturQnt.value = 0;
                   cellReturQnt.appendChild(inputReturQnt);
 
+                  row.appendChild(cellPurchase);
                   row.appendChild(cellProductName);
                   row.appendChild(cellProductQnt);
                   row.appendChild(cellReturQnt);
@@ -811,7 +837,8 @@
                       Price: price,
                       ProductTotal: Total,
                       ReturID: isi_id,
-                      ProductCode: tmp.ProductCode
+                      ProductCode: tmp.ProductCode,
+                      PurchasesID: purchaseId
                     }
                   })
                 );

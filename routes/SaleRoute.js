@@ -11,7 +11,7 @@ const router = express.Router();
 router.get('/sale', async (req, res) => {
     try {
         let saleCount = await Sale.count();
-        const { sort = 'OrderDate', order = 'DESC', search = '', startDate, endDate } = req.query;
+        const { sort = 'id', order = 'DESC', search = '', startDate, endDate } = req.query;
 
         // Calculate the default date range
         const defaultEndDate = moment().endOf('day').format('YYYY-MM-DD');

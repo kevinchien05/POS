@@ -68,7 +68,7 @@ router.get('/debtHistory', (req, res) => {
 
     const orderCondition = sort === 'supplierName'
         ? [[{ model: Purchase }, { model: Supplier }, 'SupplierName', order]]
-        : sort === 'total' ? [[{ model: Purchase }, 'Total', order]] : sort === 'pelunasan' ? [[{ model: Purchase }, 'OrderDate', order]] : [[sort, order]];
+        : sort === 'total' ? [[{ model: Purchase }, 'Total', order]] : sort === 'pelunasan' ? [[{ model: Purchase }, 'OrderDate', order]] : sort === 'kode' ? [[{model: Purchase}, 'id']] : [[sort, order]];
 
     Debt.findAll({
         where: searchCondition,

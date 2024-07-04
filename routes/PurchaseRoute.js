@@ -15,7 +15,7 @@ const router = express.Router();
 router.get('/purchase', async (req, res) => {
     try {
         let purchaseCount = await Purchase.count();
-        const { sort = 'OrderDate', order = 'DESC', search = '', startDate, endDate } = req.query;
+        const { sort = 'id', order = 'DESC', search = '', startDate, endDate } = req.query;
 
         // Calculate the default date range
         const defaultEndDate = moment().endOf('day').format('YYYY-MM-DD');
@@ -31,6 +31,7 @@ router.get('/purchase', async (req, res) => {
 
         const searchCondition = search ? {
             [Op.or]: [
+                { id: { [Op.like]: `%${search}%` } },
                 { OrderDate: { [Op.like]: `%${search}%` } },
                 { Total: { [Op.like]: `%${search}%` } },
                 { '$Supplier.SupplierName$': { [Op.like]: `%${search}%` } },

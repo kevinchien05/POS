@@ -347,7 +347,7 @@
         <form action="" class="form-container-pembelian-produk">
           <div class="product-search-form">
             <h2 class="text-form-pembelian">Produk</h2>
-          
+
           </div>
           <div id="table-product-form" class="table-product-form">
             <table id="productTable">
@@ -408,6 +408,15 @@
 
     <div class="title-divider-penjualan">
       <!-- Identification For Each Data -->
+      <div class="id-supplier">
+        Kode Pembelian
+        <button type="button" class="btn btn-sorting" id=""
+          onclick="sortData('Id',`<%= order === 'ASC' ? 'DESC' : 'ASC' %>`)"><svg xmlns="http://www.w3.org/2000/svg"
+            width="16" height="16" fill="currentColor" class="bi bi-arrow-down-up" viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+              d="M11.5 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L11 2.707V14.5a.5.5 0 0 0 .5.5m-7-14a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L4 13.293V1.5a.5.5 0 0 1 .5-.5" />
+          </svg></button>
+      </div>
       <div class="nama-supplier">
         Supplier
         <button type="button" class="btn btn-sorting" id=""
@@ -464,83 +473,91 @@
       <!-- Looping Data List Produk -->
       <hr class="for-pembelian">
       <% for( let i=0; i < purchases.length; i++ ) { %>
-        <div class="item centereditem" id="item">
-          <p id="kode">
-            <%= purchases[i].supplier.SupplierName %>
-          </p>
-        </div>
-        <div class="item centereditem" id="item">
-          <p id="kode">
-            <%= formatDate(purchases[i].OrderDate) %>
-          </p>
-        </div>
-        <div class="item-3 centereditem" id="item-3">
-          <% for( let j=0; j < purchases[i].purchaseproducts.length; j++ ) { %>
-            <% if (purchases[i].purchaseproducts[j].Qnt==0) { %>
-              <p hidden></p>
-              <% } else { %>
-                <p id="kode-3-1">
-                  <%= purchases[i].purchaseproducts[j].product.ProductName %>
-                </p>
-                <% } %>
-
+        <% if (purchases[i].Total!=0) { %>
+          <div class="item centereditem" id="item">
+            <p id="kode">
+              <%= purchases[i].id %>
+            </p>
+          </div>
+          <div class="item centereditem" id="item">
+            <p id="kode">
+              <%= purchases[i].supplier.SupplierName %>
+            </p>
+          </div>
+          <div class="item centereditem" id="item">
+            <p id="kode">
+              <%= formatDate(purchases[i].OrderDate) %>
+            </p>
+          </div>
+          <div class="item-3 centereditem" id="item-3">
+            <% for( let j=0; j < purchases[i].purchaseproducts.length; j++ ) { %>
+              <% if (purchases[i].purchaseproducts[j].Qnt==0) { %>
+                <p hidden></p>
+                <% } else { %>
+                  <p id="kode-3-1">
+                    <%= purchases[i].purchaseproducts[j].product.ProductName %>
+                  </p>
                   <% } %>
-        </div>
-        <div class="item-4 centereditem" id="item-4">
-          <% for( let j=0; j < purchases[i].purchaseproducts.length; j++ ) { %>
-            <% if (purchases[i].purchaseproducts[j].Qnt==0) { %>
-              <p hidden></p>
-              <% } else { %>
-                <p id="kode-4">
-                  <%= purchases[i].purchaseproducts[j].Qnt %>
-                </p>
-                <% } %>
 
+                    <% } %>
+          </div>
+          <div class="item-4 centereditem" id="item-4">
+            <% for( let j=0; j < purchases[i].purchaseproducts.length; j++ ) { %>
+              <% if (purchases[i].purchaseproducts[j].Qnt==0) { %>
+                <p hidden></p>
+                <% } else { %>
+                  <p id="kode-4">
+                    <%= purchases[i].purchaseproducts[j].Qnt %>
+                  </p>
                   <% } %>
-        </div>
-        <div class="item-5 centereditem" id="item-5">
-          <% for( let j=0; j < purchases[i].purchaseproducts.length; j++ ) { %>
-            <% if (purchases[i].purchaseproducts[j].Qnt==0) { %>
-              <p hidden></p>
-              <% } else { %>
-                <p id="kode-5">
-                  <%= purchases[i].purchaseproducts[j].product.Unit %>
-                </p>
-                <% } %>
 
+                    <% } %>
+          </div>
+          <div class="item-5 centereditem" id="item-5">
+            <% for( let j=0; j < purchases[i].purchaseproducts.length; j++ ) { %>
+              <% if (purchases[i].purchaseproducts[j].Qnt==0) { %>
+                <p hidden></p>
+                <% } else { %>
+                  <p id="kode-5">
+                    <%= purchases[i].purchaseproducts[j].product.Unit %>
+                  </p>
                   <% } %>
-        </div>
-        <div class="item-7 centereditem" id="item-7">
-          <% for( let j=0; j < purchases[i].purchaseproducts.length; j++ ) { %>
-            <% if (purchases[i].purchaseproducts[j].Qnt==0) { %>
-              <p hidden></p>
-              <% } else { %>
-                <p id="kode-7">
-                  <%= formatRupiah(purchases[i].purchaseproducts[j].Price) %>
-                </p>
-                <% } %>
 
+                    <% } %>
+          </div>
+          <div class="item-7 centereditem" id="item-7">
+            <% for( let j=0; j < purchases[i].purchaseproducts.length; j++ ) { %>
+              <% if (purchases[i].purchaseproducts[j].Qnt==0) { %>
+                <p hidden></p>
+                <% } else { %>
+                  <p id="kode-7">
+                    <%= formatRupiah(purchases[i].purchaseproducts[j].Price) %>
+                  </p>
                   <% } %>
-        </div>
-        <div class="item-7 centereditem" id="item-7">
-          <p id="kode-7">
-            <%= formatRupiah(purchases[i].Total) %>
-          </p>
-        </div>
-        <div class="item-8 centereditem" id="item-8" style="text-align: center;">
-          <p id="kode-8">
-            <% if (purchases[i].Status==0) { %>
-              Tunai
-              <% }else if(purchases[i].Status==1){ %>
-                Utang
-                <% }else{ %>
-                  Lunas
-                  <% } %>
-          </p>
-        </div>
-        <hr class="for-pembelian">
 
-        <% } %>
+                    <% } %>
+          </div>
+          <div class="item-7 centereditem" id="item-7">
+            <p id="kode-7">
+              <%= formatRupiah(purchases[i].Total) %>
+            </p>
+          </div>
+          <div class="item-8 centereditem" id="item-8" style="text-align: center;">
+            <p id="kode-8">
+              <% if (purchases[i].Status==0) { %>
+                Tunai
+                <% }else if(purchases[i].Status==1){ %>
+                  Utang
+                  <% }else{ %>
+                    Lunas
+                    <% } %>
+            </p>
+          </div>
+          <hr class="for-pembelian">
+          <% } %>
+
+
+            <% } %>
     </div>
     <% function formatDate(dateString) { const date=new Date(dateString); const
       day=String(date.getDate()).padStart(2, '0' ); const month=String(date.getMonth() + 1).padStart(2, '0' ); const
@@ -567,7 +584,8 @@
       tmp++;
       exists = true;
       while (exists) {
-        result = `${tmp}`;
+        formattedCounter = tmp.toString().padStart(4, '0');
+        result = `KB${formattedCounter}`;
         let kode = await axios.get(`/api/purchase/${result}`);
         if (kode.data.response) {
           tmp++;
