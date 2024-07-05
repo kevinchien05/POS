@@ -11,14 +11,14 @@ import permit from "./controllers/auth.js";
 //Router
 import RootRouter from './routes/Root.js';
 import KasRoute from './routes/KasRoute.js';
-import DebtRoute from './routes/DebtRoute.js';
-import OperationalRoute from './routes/OperationalRoute.js';
+import DebtRoute from './routes/akuntan/DebtRoute.js';
+import OperationalRoute from './routes/akuntan/OperationalRoute.js';
 import ProductRoute from './routes/ProductRoute.js';
 import PurchaseRoute from './routes/PurchaseRoute.js';
 import SaleRoute from './routes/SaleRoute.js';
 import ReturRoute from './routes/ReturRoute.js';
 import SupplierRoute from './routes/SupplierRoute.js';
-import FundRoute from './routes/FundRoute.js';
+import FundRoute from './routes/akuntan/FundRoute.js';
 import PredictRoute from './routes/PredictRoute.js';
 
 
@@ -44,11 +44,11 @@ app.use(session({
 //Login
 app.use('/', RootRouter);
 //Debt
-app.use(permit(1, 2, 3), DebtRoute);
+app.use('/akuntan',permit(1, 3), DebtRoute);
 //Operational
-app.use(permit(1, 2, 3), OperationalRoute);
+app.use('/akuntan',permit(1, 3), OperationalRoute);
 //Fund
-app.use(permit(1, 2, 3), FundRoute);
+app.use('/akuntan',permit(1, 3), FundRoute);
 //Product
 app.use(permit(1, 2), ProductRoute);
 //Purchases

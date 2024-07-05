@@ -1,10 +1,10 @@
 import express from "express";
-import Purchase from "../models/purchases.js";
-import PurchaseProduct from "../models/purchaseProduct.js";
-import Product from "../models/product.js";
-import Supplier from "../models/supplier.js";
-import Debt from "../models/debt.js";
-import { sequelize } from "../models/model.js";
+import Purchase from "../../models/purchases.js";
+import PurchaseProduct from "../../models/purchaseProduct.js";
+import Product from "../../models/product.js";
+import Supplier from "../../models/supplier.js";
+import Debt from "../../models/debt.js";
+import { sequelize } from "../../models/model.js";
 import moment from "moment";
 import { Op } from "sequelize";
 
@@ -40,7 +40,7 @@ router.get('/debt', async (req, res) => {
         }).then((results) => {
             Supplier.findAll().then((sup) => {
                 Product.findAll().then((pro) => {
-                    res.render("utang", {
+                    res.render("akuntan/utang", {
                         i_user: req.session.user || "", purchases: results, suppliers: sup, products: pro, sort, order, search
                     });
                 })
@@ -68,7 +68,7 @@ router.get('/debtHistory', (req, res) => {
 
     const orderCondition = sort === 'supplierName'
         ? [[{ model: Purchase }, { model: Supplier }, 'SupplierName', order]]
-        : sort === 'total' ? [[{ model: Purchase }, 'Total', order]] : sort === 'pelunasan' ? [[{ model: Purchase }, 'OrderDate', order]] : sort === 'kode' ? [[{model: Purchase}, 'id']] : [[sort, order]];
+        : sort === 'total' ? [[{ model: Purchase }, 'Total', order]] : sort === 'pelunasan' ? [[{ model: Purchase }, 'OrderDate', order]] : sort === 'kode' ? [[{model: Purchase}, 'id', order]] : [[sort, order]];
 
     Debt.findAll({
         where: searchCondition,
@@ -77,7 +77,7 @@ router.get('/debtHistory', (req, res) => {
             { model: Purchase, include: [{ model: PurchaseProduct, include: [{ model: Product }] }, { model: Supplier }] }
         ]
     }).then((results) => {
-        res.render("riwayat_utang", {
+        res.render("akuntan/riwayat_utang", {
             i_user: req.session.user || "", debts: results, sort, order, search
         });
     });

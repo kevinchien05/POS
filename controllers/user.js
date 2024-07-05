@@ -35,7 +35,7 @@ const auth = (req,res,next) => {
             }else if(results.Status == 2){
                 res.redirect("/product");
             }else{
-                res.redirect("/debt");
+                res.redirect("/akuntan/debt");
             }
             
         }
