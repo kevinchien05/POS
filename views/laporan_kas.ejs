@@ -377,7 +377,7 @@
     async function build_up_things() {
       document.getElementById("msg").innerHTML = "";
       document.getElementById('all-detail').innerHTML = "";
-      let totalPembelian, totalPenjualan, totalOperational, totalRetur, totalDana, totalKeuntunganPenjualan, totalUtang, totalPersediaan, totalSeluruhPembelian = 0;
+      let totalPembelian, totalHPP, totalPenjualan, totalOperational, totalRetur, totalDana, totalKeuntunganPenjualan, totalUtang, totalPersediaan, totalSeluruhPembelian = 0;
       generateInitialStructure();
       let startDate, endDate;
       if (choose_Kas == 0) {
@@ -455,7 +455,8 @@
       totalKeuntunganPenjualan = 0;
       totalDana = 0;
       totalUtang = 0;
-      totalPersediaan = 0;     
+      totalPersediaan = 0;  
+      totalHPP = 0;   
 
       if (choose_Kas == 1) {
         judulPembelianData.forEach(data => {
@@ -511,6 +512,7 @@
         let aset = totalDana + ((totalPenjualan + totalRetur) - (totalPembelian + totalOperational));
         let persedian = totalPersediaan + totalSeluruhPembelian - (totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
         let TotalAset = aset + persedian;
+        totalHPP = (totalSeluruhPembelian - totalRetur) + totalPersediaan - persedian;
         let arrayShow = [["<b>Aset</b>", ""], ["Kas dan setara kas", formatCurrency(aset)], ["Persediaan", formatCurrency(persedian)], ["<b>Jumlah Aset</b>", `<b>${formatCurrency(TotalAset)}</b>`], ["Utang Usaha", formatCurrency(totalUtang)], ["<b>Jumlah Ekuitas</b>", `<b>${formatCurrency(TotalAset - totalUtang)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
@@ -602,6 +604,7 @@
         let aset = totalDana + ((totalPenjualan + totalRetur) - (totalPembelian + totalOperational));
         let persedian = totalPersediaan + totalSeluruhPembelian - (totalPenjualan - totalKeuntunganPenjualan) - totalRetur;
         let TotalAset = aset + persedian;
+        totalHPP = (totalSeluruhPembelian - totalRetur) + totalPersediaan - persedian;
         let arrayShow = [["<b>Aset</b>", ""], ["Kas dan setara kas", formatCurrency(aset)], ["Persediaan", formatCurrency(persedian)], ["<b>Jumlah Aset</b>", `<b>${formatCurrency(TotalAset)}</b>`], ["Utang Usaha", formatCurrency(totalUtang)], ["<b>Jumlah Ekuitas</b>", `<b>${formatCurrency(TotalAset - totalUtang)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
@@ -643,7 +646,7 @@
           thead2.appendChild(baris);
           giveBreak(thead2);
         });
-        let arrayShow = [["Penjualan", formatCurrency(totalPenjualan)], ["Harga Pokok Penjualan", formatCurrency(totalPenjualan - totalKeuntunganPenjualan)], ["<b>Laba Kotor</b>", `<b>${formatCurrency(totalKeuntunganPenjualan)}</b>`], ["Beban Usaha", formatCurrency(totalOperational)], ["<b>Laba Bersih</b>", `<b>${formatCurrency(totalKeuntunganPenjualan - totalOperational)}</b>`]];
+        let arrayShow = [["Penjualan", formatCurrency(totalPenjualan)], ["Harga Pokok Penjualan", formatCurrency(totalHPP)], ["<b>Laba Kotor</b>", `<b>${formatCurrency(totalPenjualan - totalHPP)}</b>`], ["Beban Usaha", formatCurrency(totalOperational)], ["<b>Laba Bersih</b>", `<b>${formatCurrency(totalPenjualan - totalHPP - totalOperational)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
           const tanggalCell = document.createElement('td');
@@ -673,7 +676,7 @@
           thead2.appendChild(baris);
           giveBreak(thead2);
         });
-        let arrayShow = [["Penjualan", formatCurrency(totalPenjualan)], ["Harga Pokok Penjualan", formatCurrency(totalPenjualan - totalKeuntunganPenjualan)], ["<b>Laba Bruto</b>", `<b>${formatCurrency(totalKeuntunganPenjualan)}</b>`], ["Beban Usaha", formatCurrency(totalOperational)], ["<b>Laba Usaha</b>", `<b>${formatCurrency(totalKeuntunganPenjualan - totalOperational)}</b>`]];
+        let arrayShow = [["Penjualan", formatCurrency(totalPenjualan)], ["Harga Pokok Penjualan", formatCurrency(totalHPP)], ["<b>Laba Kotor</b>", `<b>${formatCurrency(totalPenjualan - totalHPP)}</b>`], ["Beban Usaha", formatCurrency(totalOperational)], ["<b>Laba Bersih</b>", `<b>${formatCurrency(totalPenjualan - totalHPP - totalOperational)}</b>`]];
         for (let i = 0; i < arrayShow.length; i++) {
           const row = document.createElement('tr');
           const tanggalCell = document.createElement('td');

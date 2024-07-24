@@ -192,7 +192,8 @@
                                           <!-- Biaya Operasional Page -->
                                           <% if (i_user.Status==1 || i_user.Status==3) { %>
                                             <li>
-                                              <a href="/akuntan/operational" class="nav-link link-dark" aria-current="page">
+                                              <a href="/akuntan/operational" class="nav-link link-dark"
+                                                aria-current="page">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                   fill="currentColor" class="bi bi-cash-coin" viewBox="0 0 16 16">
                                                   <path fill-rule="evenodd"
@@ -324,6 +325,12 @@
 
   <div id="text-prediksi-bulandpn">
     <span id="totalHasilPrediksi"></span>
+    <p></p>
+    <span id="totalPenjualan"></span>
+    <p></p>
+    <span id="totalMape"></span>
+    <p></p>
+    <span id="totalMse"></span>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
@@ -355,7 +362,7 @@
       if (document.getElementById('tahun').value && document.getElementById("bulan").value && document.getElementById("product").value) {
         document.getElementById("msg").innerHTML = "";
         document.querySelector("#reportsChart").innerHTML = "";
-        let sumY = 0, sumX = 0, sumXY = 0, sumX2 = 0, avgY = 0, b = 0, a = 0, y = 0, im = 0, hasil = 0;
+        let sumY = 0, sumX = 0, sumXY = 0, sumX2 = 0, avgY = 0, b = 0, a = 0, y = 0, im = 0, hasil = 0, totalPenjualan = 0, mape = 0, mse = 0;
         let sumMonth = 0;
         let months = [];
         let qnts = [];
@@ -363,8 +370,18 @@
         const month = document.getElementById('bulan').value;
         const start = new Date(year - 1, 0, 1);
         const end = new Date(year - 1, 11, 31);
-        const sales = await axios.get(`/api/predictTrend/${document.getElementById("product").value}/${start}/${end}`)
+        const start2 = new Date(year, 0, 1);
+        const end2 = new Date(year, 11, 31);
+        const newDate = new Date(year, month, 1);
+        const newMonth = (newDate.getMonth() + 1).toString().padStart(2, '0');
+        const newYear = newDate.getFullYear();
+        const sales = await axios.get(`/api/predictTrend/${document.getElementById("product").value}/${start}/${end}`);
+        const salesQnt = await axios.get(`/api/predictSale/${document.getElementById("product").value}/${start2}/${end2}`);
+        totalPenjualan = salesQnt.data.qnt[`${newYear}-${newMonth}`] || 0;
+        console.log(month);
+        console.log(newDate, newMonth, newYear);
         console.log(sales);
+        console.log(salesQnt.data.qnt[`${newYear}-${newMonth}`]);
         document.getElementById('title-divider-prediksipenjualan-hasil').innerText = '';
         document.getElementById('list-data-awal-graph').style.display = 'flex';
         document.getElementById('list-data-awal-prediksi').classList.add("list-data-awal-prediksi");
@@ -464,15 +481,29 @@
         const hasilPrediksiNumber2 = document.createElement('td');
         hasilPrediksiNumber.setAttribute('colspan', '2');
         hasilPrediksi.append(hasilPrediksiNumber);
+        hasilPrediksiNumber.textContent = "Total Terjual";
         hasilPrediksiNumber2.setAttribute('id', 'text-hasil');
         hasilPrediksi.append(hasilPrediksiNumber);
         hasilPrediksi.append(hasilPrediksiNumber2);
         tfoot.appendChild(hasilPrediksi);
+
         document.getElementById('text-hasil').textContent = totalTerjual;
+
+        if (totalPenjualan == 0) {
+          mape = 0;
+          mse = 0;
+        } else {
+          mape = ((Math.abs(totalPenjualan - hasil) / totalPenjualan) * 100).toFixed(2);
+          mse = (totalPenjualan - hasil) ** 2;
+        }
 
         //Spawning new box bellow for showing next dataion numbers
         document.getElementById('text-prediksi-bulandpn').classList.add("list-data-awal-prediksi-2");
         document.getElementById('totalHasilPrediksi').innerHTML = `Prediksi total penjualan untuk bulan <b>${monthList[month]}</b> adalah <b>${hasil}</b>`;
+        document.getElementById('totalPenjualan').innerHTML = `Total penjualan untuk bulan <b>${monthList[month]}</b> adalah <b>${totalPenjualan}</b>`;
+        document.getElementById('totalMape').innerHTML = `Hasil MAPE adalah <b>${mape}%</b>`;
+        document.getElementById('totalMse').innerHTML = `Hasil MSE adalah <b>${mse}</b>`;
+
 
         new ApexCharts(document.querySelector("#reportsChart"), {
           series: [{

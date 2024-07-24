@@ -73,6 +73,21 @@ router.get('/api/retur/:id/:date', async (req, res) => {
 
 });
 
+router.get('/api/retur2/:kode', async (req, res) => {
+    try {
+        await Purchase.findAll({
+            where: {
+                id: req.params.kode
+            }, include: [{ model: PurchaseProduct, include: [{ model: Product }] }]
+        }).then((results) => {
+            res.json({ status: 200, error: null, response: results });
+        })
+    } catch (error) {
+        res.json({ status: 500, error: error, response: {} });
+    }
+
+});
+
 //tambah table returpurchases
 router.post('/api/retur-purchases', (req, res) => {
     Retur.create({ id: req.body.id, ReturDate: req.body.ReturDate, Total: req.body.Total, SupplierID: req.body.SupplierID }

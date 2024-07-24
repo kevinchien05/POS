@@ -192,7 +192,8 @@
                                           <!-- Biaya Operasional Page -->
                                           <% if (i_user.Status==1 || i_user.Status==3) { %>
                                             <li>
-                                              <a href="/akuntan/operational" class="nav-link link-dark" aria-current="page">
+                                              <a href="/akuntan/operational" class="nav-link link-dark"
+                                                aria-current="page">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                   fill="currentColor" class="bi bi-cash-coin" viewBox="0 0 16 16">
                                                   <path fill-rule="evenodd"
@@ -268,20 +269,36 @@
           <input type="text" id="kode" hidden>
 
           <div class="dropdown-form">
-            <label for="nama">Supplier</label>
-            <select class="dropdownsupp" id="supplier" name="supplier">
-              <option value="" disabled selected>Pilih Supplier</option>
-              <% for( let i=0; i < suppliers.length; i++ ) { %>
-                <option value="<%= suppliers[i].Id %>">
-                  <%= suppliers[i].SupplierName %> (<%= suppliers[i].Description || "-" %>)
-                </option>
-                <% } %>
+            <label for="nama2">Pilih Berdasarkan</label>
+            <select class="dropdownsupp" id="nama2" name="nama2" onchange="selectedItem(this)">
+              <option value="supplier_tanggal" selected>Supplier & Tanggal</option>
+              <option value="kode_pembelian">Kode Pembelian</option>
             </select>
           </div>
-          <div class="date-form">
-            <label for="tglpesanan">Tanggal Pesanan</label>
-            <input type="date" name="tanggal" id="date-picked" required>
+
+          <div class="tipe1" id="tipe1">
+            <div class="dropdown-form">
+              <label for="nama">Supplier</label>
+              <select class="dropdownsupp" id="supplier" name="supplier">
+                <option value="" disabled selected>Pilih Supplier</option>
+                <% for( let i=0; i < suppliers.length; i++ ) { %>
+                  <option value="<%= suppliers[i].Id %>">
+                    <%= suppliers[i].SupplierName %> (<%= suppliers[i].Description || "-" %>)
+                  </option>
+                  <% } %>
+              </select>
+            </div>
+            <div class="date-form">
+              <label for="tglpesanan">Tanggal Pesanan</label>
+              <input type="date" name="tanggal" id="date-picked" required>
+            </div>
           </div>
+
+          <div class="tipe2" id="tipe2" style="display: none;">
+            <label for="kodeBuy">Kode Pembelian</label>
+            <input type="text" name="kodeBuy" id="kodeBuy" required>
+          </div>
+
 
           <div class="generateButton-retur-pembelian">
             <button class="btn btn-success yes-form-btn" type="button" onclick="fetchData()">Cek</button>
@@ -485,73 +502,138 @@
     }
   </script>
   <script>
+    choose = 0;
     let results = [];
     async function fetchData() {
       document.getElementById('msg').innerText = "";
       let supplier = document.getElementById('supplier').value;
       let date = document.getElementById('date-picked').value;
+      let kodeBuy = document.getElementById('kodeBuy').value;
       const resultTableBody = document.getElementById('resultTable').querySelector('tbody');
       resultTableBody.innerHTML = ''; // Mengosongkan hasil sebelumnya
       results = [];
-      if (supplier == "") {
-        document.getElementById('msg').innerText = "Supplier Kosong";
-      }
-      else if (supplier && date) {
-        document.getElementById("list-retur-pembelian").style.display = "flex";
-        try {
-          const responses = await axios.get(`/api/retur/${supplier}/${date}`);
-          console.log(responses.data.response)
-          if (responses.data.response.length > 0) {
-            responses.data.response.forEach((res) => {
-              res.purchaseproducts.forEach((pur) => {
-                if (pur.Qnt > 0) {
-                  results.push({
-                    ProductCode: pur.ProductCode,
-                    ProductName: pur.product.ProductName,
-                    ProductQnt: pur.Qnt,
-                    TotalQnt: pur.product.Qnt,
-                    ProductPrice: pur.Price,
-                    ProductUnit: pur.product.Unit,
-                    ID: pur.id,
-                    PurchasesID: pur.PurchasesID,
-                    FullTotal: res.Total
-                  });
-                  // Membuat baris baru untuk tabel
-                  const row = document.createElement('tr');
-                  const cellPurchase = document.createElement('td');
-                  const cellProductName = document.createElement('td');
-                  const cellProductQnt = document.createElement('td');
-                  const cellReturQnt = document.createElement('td');
+      if (choose == 0) {
+        if (supplier == "") {
+          document.getElementById('msg').innerText = "Supplier Kosong";
+        }
+        else if (supplier && date) {
+          document.getElementById("list-retur-pembelian").style.display = "flex";
+          try {
+            const responses = await axios.get(`/api/retur/${supplier}/${date}`);
+            console.log(responses.data.response)
+            if (responses.data.response.length > 0) {
+              responses.data.response.forEach((res) => {
+                res.purchaseproducts.forEach((pur) => {
+                  if (pur.Qnt > 0) {
+                    results.push({
+                      ProductCode: pur.ProductCode,
+                      ProductName: pur.product.ProductName,
+                      ProductQnt: pur.Qnt,
+                      TotalQnt: pur.product.Qnt,
+                      ProductPrice: pur.Price,
+                      ProductUnit: pur.product.Unit,
+                      ID: pur.id,
+                      PurchasesID: pur.PurchasesID,
+                      FullTotal: res.Total
+                    });
+                    // Membuat baris baru untuk tabel
+                    const row = document.createElement('tr');
+                    const cellPurchase = document.createElement('td');
+                    const cellProductName = document.createElement('td');
+                    const cellProductQnt = document.createElement('td');
+                    const cellReturQnt = document.createElement('td');
 
-                  cellPurchase.innerText = pur.PurchasesID;
-                  cellProductName.innerText = pur.product.ProductName;
-                  cellProductQnt.innerText = `${pur.Qnt} ${pur.product.Unit}`;
-                  cellProductQnt.className = "centered-item";
-                  const inputReturQnt = document.createElement('input');
-                  inputReturQnt.type = 'text';
-                  inputReturQnt.id = `returnQuantityInput_${pur.id}`;
-                  inputReturQnt.className = "centered-item";
-                  inputReturQnt.value = 0;
-                  cellReturQnt.appendChild(inputReturQnt);
+                    cellPurchase.innerText = pur.PurchasesID;
+                    cellProductName.innerText = pur.product.ProductName;
+                    cellProductQnt.innerText = `${pur.Qnt} ${pur.product.Unit}`;
+                    cellProductQnt.className = "centered-item";
+                    const inputReturQnt = document.createElement('input');
+                    inputReturQnt.type = 'text';
+                    inputReturQnt.id = `returnQuantityInput_${pur.id}`;
+                    inputReturQnt.className = "centered-item";
+                    inputReturQnt.value = 0;
+                    cellReturQnt.appendChild(inputReturQnt);
 
-                  row.appendChild(cellPurchase);
-                  row.appendChild(cellProductName);
-                  row.appendChild(cellProductQnt);
-                  row.appendChild(cellReturQnt);
+                    row.appendChild(cellPurchase);
+                    row.appendChild(cellProductName);
+                    row.appendChild(cellProductQnt);
+                    row.appendChild(cellReturQnt);
 
-                  resultTableBody.appendChild(row);
-                }
+                    resultTableBody.appendChild(row);
+                  }
+                })
               })
-            })
-          } else {
-            document.getElementById("list-retur-pembelian").style.display = "none";
-            document.getElementById('msg').innerText = "Tidak Ada Pembelian";
-          }
+            } else {
+              document.getElementById("list-retur-pembelian").style.display = "none";
+              document.getElementById('msg').innerText = "Tidak Ada Pembelian";
+            }
 
-        } catch (error) {
-          console.log(error);
+          } catch (error) {
+            console.log(error);
+          }
+        }
+      } else {
+        if (kodeBuy == "") {
+          document.getElementById('msg').innerText = "Kode Pembelian Kosong";
+        }
+        else if (kodeBuy) {
+          document.getElementById("list-retur-pembelian").style.display = "flex";
+          try {
+            const responses = await axios.get(`/api/retur2/${kodeBuy}`);
+            console.log(responses.data.response)
+            if (responses.data.response.length > 0) {
+              responses.data.response.forEach((res) => {
+                res.purchaseproducts.forEach((pur) => {
+                  if (pur.Qnt > 0) {
+                    results.push({
+                      ProductCode: pur.ProductCode,
+                      ProductName: pur.product.ProductName,
+                      ProductQnt: pur.Qnt,
+                      TotalQnt: pur.product.Qnt,
+                      ProductPrice: pur.Price,
+                      ProductUnit: pur.product.Unit,
+                      ID: pur.id,
+                      PurchasesID: pur.PurchasesID,
+                      FullTotal: res.Total
+                    });
+                    // Membuat baris baru untuk tabel
+                    const row = document.createElement('tr');
+                    const cellPurchase = document.createElement('td');
+                    const cellProductName = document.createElement('td');
+                    const cellProductQnt = document.createElement('td');
+                    const cellReturQnt = document.createElement('td');
+
+                    cellPurchase.innerText = pur.PurchasesID;
+                    cellProductName.innerText = pur.product.ProductName;
+                    cellProductQnt.innerText = `${pur.Qnt} ${pur.product.Unit}`;
+                    cellProductQnt.className = "centered-item";
+                    const inputReturQnt = document.createElement('input');
+                    inputReturQnt.type = 'text';
+                    inputReturQnt.id = `returnQuantityInput_${pur.id}`;
+                    inputReturQnt.className = "centered-item";
+                    inputReturQnt.value = 0;
+                    cellReturQnt.appendChild(inputReturQnt);
+
+                    row.appendChild(cellPurchase);
+                    row.appendChild(cellProductName);
+                    row.appendChild(cellProductQnt);
+                    row.appendChild(cellReturQnt);
+
+                    resultTableBody.appendChild(row);
+                  }
+                })
+              })
+            } else {
+              document.getElementById("list-retur-pembelian").style.display = "none";
+              document.getElementById('msg').innerText = "Tidak Ada Pembelian";
+            }
+
+          } catch (error) {
+            console.log(error);
+          }
         }
       }
+
     }
   </script>
   <script>
@@ -956,6 +1038,21 @@
       // Set nilai default input tanggal
       dateInput.value = formattedDate;
     });
+  </script>
+
+  <script>
+    function selectedItem(el) {
+      var elementInside = el.options[el.selectedIndex].value;
+      if (elementInside == "kode_pembelian") {
+        document.getElementById("tipe1").style.display = "none";
+        document.getElementById("tipe2").style.display = "block";
+        choose = 1;
+      } else {
+        document.getElementById("tipe2").style.display = "none";
+        document.getElementById("tipe1").style.display = "block";
+        choose = 0;
+      }
+    };
   </script>
 
 </body>
