@@ -14,12 +14,12 @@ router.get('/product', async (req, res) => {
 
         const searchCondition = search ? {
             [Op.or]: [
-                {ProductCode: {[Op.like]: `%${search}%`}},
-                {ProductName: {[Op.like]: `%${search}%`}},
-                {Qnt: {[Op.like]: `%${search}%`}},
-                {Unit: {[Op.like]: `%${search}%`}},
-                {BuyPrice: {[Op.like]: `%${search}%`}},
-                {SellPrice: {[Op.like]: `%${search}%`}}
+                { ProductCode: { [Op.like]: `%${search}%` } },
+                { ProductName: { [Op.like]: `%${search}%` } },
+                { Qnt: { [Op.like]: `%${search}%` } },
+                { Unit: { [Op.like]: `%${search}%` } },
+                { BuyPrice: { [Op.like]: `%${search}%` } },
+                { SellPrice: { [Op.like]: `%${search}%` } }
             ]
 
         } : {};
@@ -27,7 +27,7 @@ router.get('/product', async (req, res) => {
         Product.findAll(
             {
                 where: searchCondition,
-                order: [[sort,order]]
+                order: [[sort, order]]
             }
         ).then((results) => {
             res.render("stok_barang", { i_user: req.session.user || "", products: results, counter: productCount, sort, order, search });
@@ -37,7 +37,7 @@ router.get('/product', async (req, res) => {
     }
 });
 
-router.get('/api/stok/:kode',  (req, res) => {
+router.get('/api/stok/:kode', (req, res) => {
     Product.findOne({
         where: { ProductCode: req.params.kode }
     }).then((results) => {
@@ -63,24 +63,24 @@ router.post('/api/stok', async (req, res) => {
     if (!allowedType.includes(ext.toLowerCase())) return res.json({ msg: "Format Gambar Harus JPG, JPEG, PNG" });
     if (fileSize > 5000000) return res.json({ msg: "Ukuran Gambar Harus Dibawah 5 MB" });
 
-    const existingProduct = await Product.findOne({where: {ProductName: ProductName}});
-    const checkImage = await Product.findOne({where: {Image: fileName}});
-    if(existingProduct){
+    const existingProduct = await Product.findOne({ where: { ProductName: ProductName } });
+    const checkImage = await Product.findOne({ where: { Image: fileName } });
+    if (existingProduct) {
         return res.json({ msg: "Produk sudah pernah terdaftar!" });
     }
-    if(checkImage){
+    if (checkImage) {
         return res.json({ msg: "Gambar Sudah Ada" });
     }
     const name = /^[a-zA-Z0-9][a-zA-Z0-9\s]+$/
     const regex = /^[A-Za-z][a-zA-Z\s]+$/;
     const num = /^[0-9]+$/;
-    if(!name.test(ProductName)){
+    if (!name.test(ProductName)) {
         return res.json({ msg: "Nama Produk Hanya Huruf dan Angka " });
     }
-    if(!regex.test(Unit)){
+    if (!regex.test(Unit)) {
         return res.json({ msg: "Satuan Wajib Huruf " });
     }
-    if(!num.test(SellPrice)){
+    if (!num.test(SellPrice)) {
         return res.json({ msg: "Harga Wajib Angka " });
     }
 
@@ -109,13 +109,13 @@ router.put('/api/stok/:kode', async (req, res) => {
     const name = /^[a-zA-Z0-9][a-zA-Z0-9\s]+$/
     const regex = /^[A-Za-z][a-zA-Z\s]+$/;
     const num = /^[0-9]+$/;
-    if(!name.test(ProductName)){
+    if (!name.test(ProductName)) {
         return res.json({ msg: "Nama Produk Hanya Huruf dan Angka " });
     }
-    if(!regex.test(Unit)){
+    if (!regex.test(Unit)) {
         return res.json({ msg: "Satuan Wajib Huruf " });
     }
-    if(!num.test(SellPrice)){
+    if (!num.test(SellPrice)) {
         return res.json({ msg: "Harga Wajib Angka " });
     }
     let fileName = "";
@@ -132,17 +132,21 @@ router.put('/api/stok/:kode', async (req, res) => {
         if (fileSize > 5000000) return res.json({ msg: "Ukuran Gambar Harus Dibawah 5 MB" });
 
         const filepath = `./public/images/${product.Image}`;
-        fs.unlinkSync(filepath);
+        if (fs.existsSync(filepath)) {
+            fs.unlinkSync(filepath);
+            // console.log(`Deleted: ${filepath}`);
+        }
+        // fs.unlinkSync(filepath);
 
         file.mv(`./public/images/${fileName}`, (err) => {
             if (err) return res.status(500).json({ msg: err.message });
         });
     }
-    
+
     const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
 
     try {
-        await Product.update({ ProductName: ProductName, SellPrice: SellPrice, Unit: Unit ,Image: fileName, Url: url }, {
+        await Product.update({ ProductName: ProductName, SellPrice: SellPrice, Unit: Unit, Image: fileName, Url: url }, {
             where: {
                 ProductCode: req.params.kode
             }
