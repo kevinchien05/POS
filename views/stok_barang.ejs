@@ -373,7 +373,7 @@
       <!-- Tampilkan Produk -->
       <% for( let i=0; i < products.length; i++ ) { %>
         <div class="item centereditem">
-          <a href="<%= products[i].Url %>" target="_blank"><img src='<%= products[i].Url %>'></a>
+          <a href="/images/<%= products[i].Image %>" target="_blank"><img src='/images/<%= products[i].Image %>'></a>
         </div>
         <div class="item-stok centereditem" id="item">
           <p id="kode">
